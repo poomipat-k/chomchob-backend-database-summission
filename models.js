@@ -1,4 +1,4 @@
-const { Sequelize, DataTypes } = require("sequelize");
+const { Sequelize, DataTypes, Op } = require("sequelize");
 // Use SQLITE for this demo for easy of configuration
 const sequelize = new Sequelize("sqlite::memory:");
 
@@ -92,4 +92,5 @@ module.exports = {
   Price,
   Code,
   ItemCode,
+  Op,
 };

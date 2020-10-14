@@ -1,6 +1,7 @@
 "use strict";
 
-const { sequelize, Item, Price, Code, ItemCode } = require("../models");
+const { sequelize, Item, Price, Code, ItemCode, Op } = require("../models");
+const chalk = require("chalk");
 const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
 
 (async () => {
@@ -37,9 +38,9 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
     // Null on promotion_open_sale_date can be seperate on two case
     // 1: if sale_start_date is not null, the promotion price already valid until promotion_end_sale_date
     // 2. if sale_end_date is also null, the promotion price is not valid. Use normal price
-    promotion_open_sale_date: Date.now(),
+    promotion_start_date: Date.now(),
     // Null on promotion_end_sale_date means promotion valid till end_sale_date (code table)
-    promotion_end_sale_date: Date.now() + 3 * DAY,
+    promotion_end_date: Date.now() + 3 * DAY,
   });
   const priceId = priceOneItem.id;
   console.log("Price Id: ", priceId);
@@ -65,22 +66,94 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
     await itemCode.addItem(sword);
   }
 
-  // Check result
+  // // Check result
   const searchValues = await Item.findOne({
     where: { name: "sword" },
     include: Code,
   });
   console.log(searchValues.toJSON());
+
   ////// End case 1  /////////
 
-  // // Customer purchase procedure
-  // // Website show a list of distince item code details from Code
-  // const [queryResult, metadata] = await sequelize.query(
-  //   "SELECT DISTINCT code_details FROM codes"
-  // );
-  // // Only has one results since we only create one so far
-  // console.log(queryResult);
+  // Customer purchase procedure
+  // Website show a list of distince item code details from Code
+  console.log(chalk.green("END OF ADMIN SET ITEM TO SELL"));
+  const [queryResult, metadata] = await sequelize.query(
+    "SELECT DISTINCT code_details FROM codes"
+  );
+  // Only has one results since we only create one distince so far
+  console.log(queryResult);
 
-  // const buyKeyword = queryResult[0].code_details;
-  // console.log(buyKeyword);
+  // Keyword for search item price, code
+  const buyKeyword = queryResult[0].code_details;
+  console.log(
+    chalk.yellow(`Keyword to search on code tables is "${buyKeyword}"`)
+  );
+
+  // Provide the price for the code customer want to purchase
+  // Find one that code_details match keyword, code still open for sale
+  // and code purchased flag is false
+  const codeSearchResult = await Code.findOne({
+    where: {
+      code_details: buyKeyword,
+      sale_end_date: {
+        [Op.gt]: new Date(),
+      },
+      purchased: false,
+    },
+    include: Price,
+  });
+  console.log(codeSearchResult.toJSON());
+  // Determine whether promotion price or normal price will be shown from code promotion_end_date
+  let priceToShow;
+  if (codeSearchResult !== null) {
+    if (Date.now() < codeSearchResult.toJSON().price.promotion_end_date) {
+      priceToShow = codeSearchResult.toJSON().price.promotion_price;
+    } else {
+      priceToShow = codeSearchResult.toJSON().price.normal_price;
+    }
+  } else {
+    throw new Error("Valid code not found");
+  }
+
+  // Show priceToShow to customer
+  console.log(chalk.yellow(`Price of query item is ${priceToShow}`));
+
+  // if customer design to buy the code, provide customer the code
+  // and change purchase status to true
+  // (you may need to check again if codeSearchResult purchased is still false)
+  const updateCode = await codeSearchResult.reload();
+  if (updateCode.toJSON().purchased === true) {
+    throw new Error("Code is purchased already");
+    // or find a new code that has the same code_details and price
+  }
+  await updateCode.update({
+    purchased: true,
+  });
+  // Purchase compleated!!!
+
+  // User use code in the game
+  const codeToUse = await updateCode.reload();
+  if (codeToUse.toJSON().used === true) {
+    throw new Error("Code is used");
+  }
+  await codeToUse.update({
+    used: true,
+  });
+
+  // Re check code table that only one code is purchased and used
+  const usedCodeResult = await Code.findAll({
+    where: {
+      purchased: true,
+      used: true,
+    },
+  });
+
+  console.log(
+    chalk.yellow(
+      `Code that are both purchased and used: ${
+        usedCodeResult.length
+      } code\nCode: ${usedCodeResult[0].toJSON().code}`
+    )
+  );
 })();
