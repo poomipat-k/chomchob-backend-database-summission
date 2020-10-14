@@ -1,6 +1,6 @@
 "use strict";
 
-const { sequelize, Item, Price, Code } = require("../models");
+const { sequelize, Item, Price, Code, ItemCode } = require("../models");
 const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
 
 (async () => {
@@ -60,7 +60,7 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
     // Add price to code by special method
     await itemCode.setPrice(priceOneItem);
 
-    // Step 4: insert 4 rows(4 codes * 1 item/code ) of pairs (code_id, item_id)
+    // Step 4: insert 4 rows(4 codes * 1 item/code ) 
     // into Item_code table by special method
     await itemCode.addItem(sword);
   }
@@ -68,7 +68,7 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
   // Check result
   const searchValues = await Item.findOne({
     where: { name: "sword" },
-    include: [Code],
+    include: Code,
   });
   console.log(searchValues.toJSON());
   ////// End case 1  /////////

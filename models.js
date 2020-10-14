@@ -39,6 +39,8 @@ const Price = sequelize.define(
   { timestamps: false }
 );
 
+const ItemCode = sequelize.define("ItemCode", {}, { timestamps: false });
+
 const Code = sequelize.define(
   "code",
   {
@@ -81,12 +83,13 @@ Price.hasMany(Code);
 Code.belongsTo(Price);
 
 // Item and Code Model are in many-to-many relationship
-Item.belongsToMany(Code, { through: "item_code", timestamps: false });
-Code.belongsToMany(Item, { through: "item_code", timestamps: false });
+Item.belongsToMany(Code, { through: ItemCode, timestamps: false });
+Code.belongsToMany(Item, { through: ItemCode, timestamps: false });
 
 module.exports = {
   sequelize,
   Item,
   Price,
   Code,
+  ItemCode,
 };
