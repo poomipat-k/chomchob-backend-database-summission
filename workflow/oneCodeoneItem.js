@@ -8,6 +8,7 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
   // Sync all table in database, delete if already exist then create
   // { force: true } for this assignment purpose only
   await sequelize.sync({ force: true });
+  console.log(chalk.green("DATABASE FORCED SYNC"));
 
   const items = ["gun", "bow", "knife", "sword"];
   // Create items
@@ -141,7 +142,16 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
     used: true,
   });
 
-  // Re check code table that only one code is purchased and used
+  // System retried which item to provide to the user in the game by
+  // Searching the code in item_code (junction table)
+  const allItemGetFromTheCode = await codeToUse.getItems();
+  console.log(chalk.red("Customer will get following item:"));
+  allItemGetFromTheCode.forEach((item) => {
+    console.log(item.toJSON());
+    console.log(chalk.red("==================="));
+  });
+
+  // Re-check code table that only one code is purchased and used
   const usedCodeResult = await Code.findAll({
     where: {
       purchased: true,
