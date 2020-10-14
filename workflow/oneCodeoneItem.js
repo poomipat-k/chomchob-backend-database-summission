@@ -60,7 +60,7 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
     // Add price to code by special method
     await itemCode.setPrice(priceOneItem);
 
-    // Step 4: insert 4 rows(4 codes * 1 item/code ) 
+    // Step 4: insert 4 rows(4 codes * 1 item/code )
     // into Item_code table by special method
     await itemCode.addItem(sword);
   }
@@ -72,4 +72,15 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
   });
   console.log(searchValues.toJSON());
   ////// End case 1  /////////
+
+  // // Customer purchase procedure
+  // // Website show a list of distince item code details from Code
+  // const [queryResult, metadata] = await sequelize.query(
+  //   "SELECT DISTINCT code_details FROM codes"
+  // );
+  // // Only has one results since we only create one so far
+  // console.log(queryResult);
+
+  // const buyKeyword = queryResult[0].code_details;
+  // console.log(buyKeyword);
 })();
