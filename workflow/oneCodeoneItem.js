@@ -78,7 +78,9 @@ const DAY = 24 * 60 * 60 * 1000; // One day in milliseconds
 
   // Customer purchase procedure
   // Website show a list of distince item code details from Code
-  console.log(chalk.green("END OF ADMIN SET ITEM TO SELL"));
+  console.log(
+    chalk.red("BELOW IS A DEMONSTRATION WHEN CUSTOMER BUY AND USE A CODE")
+  );
   const [queryResult, metadata] = await sequelize.query(
     "SELECT DISTINCT code_details FROM codes"
   );
